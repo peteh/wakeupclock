@@ -1,13 +1,10 @@
+#include <Arduino.h>
 #include <lvgl.h>
 #include <lv_conf.h>
 #include <TFT_eSPI.h>
 #include "FT62XXTouchScreen.h"
-/*If you want to use the LVGL examples,
-  make sure to install the lv_examples Arduino library
-  and uncomment the following line.
-#include <lv_examples.h>
-*/
-
+#include "Backlight.h"
+#include "ClockEditWidget.h"
 /*Change to your screen resolution*/
 static const uint16_t screenWidth = 480;
 static const uint16_t screenHeight = 320;
@@ -17,6 +14,7 @@ static lv_color_t buf[screenWidth * 10];
 
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 FT62XXTouchScreen touchScreen = FT62XXTouchScreen(TFT_WIDTH, PIN_SDA, PIN_SCL);
+Backlight backlight = Backlight(TFT_BL, 0);
 
 #if LV_USE_LOG != 0
 /* Serial debugging */
@@ -32,6 +30,9 @@ lv_obj_t *btn2;
 lv_obj_t *screenMain;
 lv_obj_t *label;
 
+lv_obj_t *slider_label;
+lv_obj_t *slider;
+
 static void event_handler_btn(lv_event_t *e)
 {
   lv_obj_t *target = lv_event_get_target(e);
@@ -39,12 +40,24 @@ static void event_handler_btn(lv_event_t *e)
   if (code == LV_EVENT_CLICKED)
   {
     if (target == btn1)
+    {
       lv_label_set_text(label, "Hello");
+    }
     else if (target == btn2)
     {
       lv_label_set_text(label, "Goodbye");
     }
   }
+}
+
+static void slider_event_cb(lv_event_t *e)
+{
+  lv_obj_t *slider = lv_event_get_target(e);
+  char buf[8];
+  backlight.setBrightness((uint8_t)lv_slider_get_value(slider));
+  lv_snprintf(buf, sizeof(buf), "%d%%", (int)lv_slider_get_value(slider));
+  lv_label_set_text(slider_label, buf);
+  lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 }
 
 /* Display flushing */
@@ -64,18 +77,16 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
 /*Read the touchpad*/
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
 {
-  //Serial.println("#");
-  uint16_t touchX, touchY;
-
+  // Serial.println("#");
   TouchPoint touchPos = touchScreen.read();
 
   if (!touchPos.touched)
   {
-    data->state = LV_INDEV_STATE_REL;
+    data->state = LV_INDEV_STATE_RELEASED;
   }
   else
   {
-    data->state = LV_INDEV_STATE_PR;
+    data->state = LV_INDEV_STATE_PRESSED;
 
     /*Set the coordinates*/
     data->point.x = touchPos.xPos;
@@ -89,6 +100,9 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
   }
 }
 
+
+
+ClockEditWidget *cew;
 void setup()
 {
   Serial.begin(115200); /* prepare for possible serial debug */
@@ -106,20 +120,15 @@ void setup()
 #endif
 
   // Enable Backlight
-  pinMode(TFT_BL, OUTPUT);
-  digitalWrite(TFT_BL, 1);
+
   tft.begin();        /* TFT init */
   tft.setRotation(1); /* Landscape orientation, flipped */
 
-  /*Set the touchscreen calibration data,
-   the actual data for your display can be aquired using
-   the Generic -> Touch_calibrate example from the TFT_eSPI library*/
-  uint16_t calData[5] = {275, 3620, 264, 3532, 1};
-  // TODO
-  // tft.setTouch( calData );
-
   // Start TouchScreen
   touchScreen.begin();
+
+  // set backlight
+  backlight.begin(20);
 
   lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * 10);
 
@@ -133,7 +142,7 @@ void setup()
   disp_drv.draw_buf = &draw_buf;
   lv_disp_drv_register(&disp_drv);
 
-  /*Initialize the (dummy) input device driver*/
+  /*Initialize the input device driver*/
   static lv_indev_drv_t indev_drv;
   lv_indev_drv_init(&indev_drv);
   indev_drv.type = LV_INDEV_TYPE_POINTER;
@@ -143,36 +152,19 @@ void setup()
   // Screen Object
   screenMain = lv_obj_create(NULL);
 
-  // Text
-  label = lv_label_create(screenMain);
-  lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
-  lv_label_set_text(label, "Press a button");
-  lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_size(label, 240, 40);
-  lv_obj_set_pos(label, 0, 15);
+  /*Create a slider in the center of the display*/
+  slider = lv_slider_create(screenMain);
+  lv_obj_center(slider);
+  lv_slider_set_range(slider, 0, 255);
+  lv_obj_add_event_cb(slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
-  // BUtton 1
-  btn1 = lv_btn_create(screenMain);
-  lv_obj_add_event_cb(btn1, event_handler_btn, LV_EVENT_ALL, NULL);
-  lv_obj_set_width(btn1, 90);
-  lv_obj_set_height(btn1, 32);
-  lv_obj_set_pos(btn1, 32, 100);
-  lv_obj_t *label1 = lv_label_create(btn1);
-  lv_label_set_text(label1, "Hello");
-  lv_obj_center(label1);
-
-  // Button 2
-  btn2 = lv_btn_create(screenMain);
-  lv_obj_add_event_cb(btn2, event_handler_btn, LV_EVENT_ALL, NULL);
-  lv_obj_set_width(btn2, 90);
-  lv_obj_set_height(btn2, 32);
-  lv_obj_set_pos(btn2, 142, 100);
-  lv_obj_t *label2 = lv_label_create(btn2);
-  lv_label_set_text(label2, "Goodbye");
-  lv_obj_center(label2);
+  /*Create a label below the slider*/
+  slider_label = lv_label_create(screenMain);
+  lv_label_set_text(slider_label, "0%");
+  lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+  cew = new ClockEditWidget(screenMain);
   // Screen load
-  lv_scr_load(screenMain);
-
+      lv_scr_load(screenMain);
   Serial.println("Setup done");
 }
 
