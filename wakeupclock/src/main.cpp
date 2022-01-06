@@ -27,28 +27,13 @@ void my_print(const char *buf)
 
 lv_obj_t *btn1;
 lv_obj_t *btn2;
-lv_obj_t *screenMain;
+lv_obj_t *screenClock;
+lv_obj_t *screenClockEdit;
+lv_obj_t *screenSettings;
 lv_obj_t *label;
 
 lv_obj_t *slider_label;
 lv_obj_t *slider;
-
-static void event_handler_btn(lv_event_t *e)
-{
-  lv_obj_t *target = lv_event_get_target(e);
-  lv_event_code_t code = lv_event_get_code(e);
-  if (code == LV_EVENT_CLICKED)
-  {
-    if (target == btn1)
-    {
-      lv_label_set_text(label, "Hello");
-    }
-    else if (target == btn2)
-    {
-      lv_label_set_text(label, "Goodbye");
-    }
-  }
-}
 
 static void slider_event_cb(lv_event_t *e)
 {
@@ -150,21 +135,22 @@ void setup()
   lv_indev_drv_register(&indev_drv);
 
   // Screen Object
-  screenMain = lv_obj_create(NULL);
-
+  screenClockEdit = lv_obj_create(NULL);
+  screenSettings = lv_obj_create(NULL);
+  screenClock = lv_obj_create(NULL);
   /*Create a slider in the center of the display*/
-  slider = lv_slider_create(screenMain);
+  slider = lv_slider_create(screenSettings);
   lv_obj_center(slider);
   lv_slider_set_range(slider, 0, 255);
   lv_obj_add_event_cb(slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
   /*Create a label below the slider*/
-  slider_label = lv_label_create(screenMain);
+  slider_label = lv_label_create(screenSettings);
   lv_label_set_text(slider_label, "0%");
   lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
-  cew = new ClockEditWidget(screenMain);
+  cew = new ClockEditWidget(screenClockEdit);
   // Screen load
-      lv_scr_load(screenMain);
+  lv_scr_load(screenClockEdit);
   Serial.println("Setup done");
 }
 

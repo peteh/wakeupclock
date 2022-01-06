@@ -1,16 +1,42 @@
 #pragma once
 
 #include <lvgl.h>
+#include <helpers/ILVCallback.h>
 
-class ClockEditWidget
+class ClockEditWidget : public ILVCallback
 {
 public:
     ClockEditWidget(lv_obj_t *parent, uint8_t hour = 0, uint8_t minute = 0);
-    ~ClockEditWidget();
+    void callBack(lv_event_t * e);
+    ~ClockEditWidget(){};
 
 private:
+
+    void setHour(uint8_t hour){
+        // TODO boundaries
+        m_hour = hour;
+    }
+
+    void setMinute(uint8_t minute){
+        // TODO: boundaries
+        m_minute = minute;
+    }
+
+    void setWeekDayEnabled(uint8_t day, bool enabled){
+        // TODO boundaries
+        m_weekDaysEnabled[day] = enabled;
+    }
+
     uint8_t m_hour;
     uint8_t m_minute;
+
+    lv_obj_t *m_rollerHour;
+    lv_obj_t *m_rollerMinute;
+
+    bool m_weekDaysEnabled[7] = { 0 };
+
+
+
     const static char *WEEKDAY_MAP[];
     const char *HOUR_VALUES = "00\n"
                               "01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n"
