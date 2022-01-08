@@ -1,7 +1,7 @@
 #include "ClockEditWidget.h"
 
 #include <Arduino.h>
-const char *ClockEditWidget::WEEKDAY_MAP[] = {"M", "T", "W", "T", "F", "S", NULL};
+const char *ClockEditWidget::WEEKDAY_MAP[] = {"M", "T", "W", "T", "F", "S", "S", NULL};
 
 void ClockEditWidget::callBack(lv_event_t *e)
 {
@@ -32,38 +32,37 @@ void ClockEditWidget::callBack(lv_event_t *e)
             setMinute(index);
         }
     }
-    
 }
 
 ClockEditWidget::ClockEditWidget(lv_obj_t *parent, uint8_t hour, uint8_t minute)
-    : m_hour(hour),
-      m_minute(minute),
-      m_rollerHour(NULL),
-      m_rollerMinute(NULL)
 {
+    m_bntMatrixWeekdayEnabled = lv_btnmatrix_create(parent);
+    lv_btnmatrix_set_map(m_bntMatrixWeekdayEnabled, WEEKDAY_MAP);
+    lv_btnmatrix_set_btn_ctrl_all(m_bntMatrixWeekdayEnabled, LV_BTNMATRIX_CTRL_CHECKABLE);
+    lv_obj_set_height(m_bntMatrixWeekdayEnabled, 60);
+    lv_obj_align(m_bntMatrixWeekdayEnabled, LV_ALIGN_BOTTOM_MID, 0, -20);
 
-    lv_obj_t *btnm1 = lv_btnmatrix_create(parent);
-    lv_btnmatrix_set_btn_ctrl_all(btnm1, LV_BTNMATRIX_CTRL_CHECKABLE);
-    lv_btnmatrix_set_map(btnm1, WEEKDAY_MAP);
-    lv_obj_align(btnm1, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    // Create enable switch
+    m_switchEnabled = lv_switch_create(parent);
+    lv_obj_align(m_switchEnabled, LV_ALIGN_CENTER, 0, -50);
+    lv_obj_add_event_cb(m_switchEnabled, lvhelper_userdata_event_handler, LV_EVENT_ALL, this);
+    lv_obj_align(m_switchEnabled, LV_ALIGN_BOTTOM_RIGHT, -40, -40);
 
-    /*Create a container with ROW flex direction*/
-    lv_obj_t *cont_row = lv_obj_create(parent);
-    lv_obj_set_size(cont_row, 300, 75);
-    lv_obj_align(cont_row, LV_ALIGN_TOP_MID, 0, 5);
-    lv_obj_set_flex_flow(cont_row, LV_FLEX_FLOW_ROW);
-
-    m_rollerHour = lv_roller_create(cont_row);
+    // Create hour selector
+    m_rollerHour = lv_roller_create(parent);
     lv_roller_set_options(m_rollerHour, HOUR_VALUES,
                           LV_ROLLER_MODE_NORMAL);
-    
+    lv_obj_align(m_rollerHour, LV_ALIGN_CENTER, -40, -40);
+
     // attach our callback to user data
     lv_obj_set_user_data(m_rollerHour, this);
     lv_obj_add_event_cb(m_rollerHour, lvhelper_userdata_event_handler, LV_EVENT_ALL, this);
 
-    m_rollerMinute = lv_roller_create(cont_row);
+    // Create minute selector
+    m_rollerMinute = lv_roller_create(parent);
     lv_roller_set_options(m_rollerMinute, MINUTE_VALUES,
                           LV_ROLLER_MODE_NORMAL);
+    lv_obj_align(m_rollerMinute, LV_ALIGN_CENTER, +40, -40);
 
     // attach our callback to user data
     lv_obj_set_user_data(m_rollerMinute, this);

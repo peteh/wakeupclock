@@ -7,35 +7,57 @@ class ClockEditWidget : public ILVCallback
 {
 public:
     ClockEditWidget(lv_obj_t *parent, uint8_t hour = 0, uint8_t minute = 0);
-    void callBack(lv_event_t * e);
+    void callBack(lv_event_t *e);
     ~ClockEditWidget(){};
 
 private:
-
-    void setHour(uint8_t hour){
+    void setHour(uint8_t hour)
+    {
         // TODO boundaries
-        m_hour = hour;
+        lv_roller_set_selected(m_rollerHour, hour, LV_ANIM_OFF);
     }
 
-    void setMinute(uint8_t minute){
-        // TODO: boundaries
-        m_minute = minute;
-    }
-
-    void setWeekDayEnabled(uint8_t day, bool enabled){
+    void setMinute(uint8_t minute)
+    {
         // TODO boundaries
-        m_weekDaysEnabled[day] = enabled;
+        lv_roller_set_selected(m_rollerMinute, minute, LV_ANIM_OFF);
     }
 
-    uint8_t m_hour;
-    uint8_t m_minute;
+    void setWeekDayEnabled(uint8_t day, bool enabled)
+    {
+        if (enabled)
+        {
+            //lv_btnmatrix_set_selected_btn()
+            //lv_obj_add_state(m_switchEnabled, LV_STATE_CHECKED);
+        }
+        else
+        {
+            lv_obj_clear_state(m_switchEnabled, LV_STATE_CHECKED);
+        }
+    }
 
-    lv_obj_t *m_rollerHour;
-    lv_obj_t *m_rollerMinute;
+    void setEnabled(bool enabled)
+    {
+        if (enabled)
+        {
+            lv_obj_add_state(m_switchEnabled, LV_STATE_CHECKED);
+        }
+        else
+        {
+            lv_obj_clear_state(m_switchEnabled, LV_STATE_CHECKED);
+        }
+    }
 
-    bool m_weekDaysEnabled[7] = { 0 };
+    bool getEnabled()
+    {
+        return lv_obj_has_state(m_switchEnabled, LV_STATE_CHECKED);
+    }
 
+    lv_obj_t *m_rollerHour = NULL;
+    lv_obj_t *m_rollerMinute = NULL;
 
+    lv_obj_t *m_switchEnabled = NULL;
+    lv_obj_t *m_bntMatrixWeekdayEnabled = NULL;
 
     const static char *WEEKDAY_MAP[];
     const char *HOUR_VALUES = "00\n"

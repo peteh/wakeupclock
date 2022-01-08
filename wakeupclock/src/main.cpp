@@ -4,7 +4,7 @@
 #include <TFT_eSPI.h>
 #include "FT62XXTouchScreen.h"
 #include "Backlight.h"
-#include "ClockEditWidget.h"
+#include "AlarmEditScreen.h"
 /*Change to your screen resolution*/
 static const uint16_t screenWidth = 480;
 static const uint16_t screenHeight = 320;
@@ -28,7 +28,7 @@ void my_print(const char *buf)
 lv_obj_t *btn1;
 lv_obj_t *btn2;
 lv_obj_t *screenClock;
-lv_obj_t *screenClockEdit;
+AlarmEditScreen *screenAlarmEdit;
 lv_obj_t *screenSettings;
 lv_obj_t *label;
 
@@ -135,7 +135,8 @@ void setup()
   lv_indev_drv_register(&indev_drv);
 
   // Screen Object
-  screenClockEdit = lv_obj_create(NULL);
+  screenAlarmEdit = new AlarmEditScreen();
+  
   screenSettings = lv_obj_create(NULL);
   screenClock = lv_obj_create(NULL);
   /*Create a slider in the center of the display*/
@@ -148,9 +149,9 @@ void setup()
   slider_label = lv_label_create(screenSettings);
   lv_label_set_text(slider_label, "0%");
   lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
-  cew = new ClockEditWidget(screenClockEdit);
+
   // Screen load
-  lv_scr_load(screenClockEdit);
+  lv_scr_load(screenAlarmEdit->getScreen());
   Serial.println("Setup done");
 }
 
