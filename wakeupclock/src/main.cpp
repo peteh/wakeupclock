@@ -5,6 +5,7 @@
 #include "FT62XXTouchScreen.h"
 #include "Backlight.h"
 #include "AlarmEditScreen.h"
+#include "ClockScreen.h"
 /*Change to your screen resolution*/
 static const uint16_t screenWidth = 480;
 static const uint16_t screenHeight = 320;
@@ -27,8 +28,8 @@ void my_print(const char *buf)
 
 lv_obj_t *btn1;
 lv_obj_t *btn2;
-lv_obj_t *screenClock;
 AlarmEditScreen *screenAlarmEdit;
+ClockScreen *screenClock;
 lv_obj_t *screenSettings;
 lv_obj_t *label;
 
@@ -136,9 +137,10 @@ void setup()
 
   // Screen Object
   screenAlarmEdit = new AlarmEditScreen();
+  screenClock = new ClockScreen();
   
   screenSettings = lv_obj_create(NULL);
-  screenClock = lv_obj_create(NULL);
+  
   /*Create a slider in the center of the display*/
   slider = lv_slider_create(screenSettings);
   lv_obj_center(slider);
@@ -151,7 +153,8 @@ void setup()
   lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 
   // Screen load
-  lv_scr_load(screenAlarmEdit->getScreen());
+  //lv_scr_load(screenAlarmEdit->getScreen());
+  lv_scr_load(screenClock->getScreen());
   Serial.println("Setup done");
 }
 
